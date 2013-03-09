@@ -17,7 +17,6 @@ class Sprite:
             self.frame = 0
 
     def __init__(self, img, direct, pos=(2,2)):
-        print direct
         self.pgsprite = pygame.sprite.Sprite()
         self.images[direct].append(img)
         self.pgsprite.image = img
@@ -26,7 +25,6 @@ class Sprite:
         self.frame = 0
 
     def addimg(self, surf, direct):
-        print self.images
         self.images[direct].append(surf)
 
     def setpos(self, pos):
@@ -42,21 +40,13 @@ class Sprite:
         self.pgsprite.rect = pygame.Rect(pos[0]*constants.tilesize, pos[1]*constants.tilesize, constants.tilesize, constants.tilesize)
 
     def moveright(self):
-        if self.direction != 3:
-            self.direction = 3
         self.setpos((self.position[0] + self.speed, self.position[1]))
 
     def moveleft(self):
-        if self.direction != 1:
-            self.direction = 1
         self.setpos((self.position[0] - self.speed, self.position[1]))
 
     def moveup(self):
-        if self.direction != 2:
-            self.direction = 2
         self.setpos((self.position[0], self.position[1] - self.speed))
 
     def movedown(self):
-        if self.direction != 0:
-            self.direction = 0
         self.setpos((self.position[0], self.position[1] + self.speed))
