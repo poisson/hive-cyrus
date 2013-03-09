@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
 import pygame, sys, os, socket, pickle
+from time import sleep
 from pygame.locals import *
 
 import constants
+import lemons
 import tile
 import sprite, zsprite
 import room
@@ -50,17 +52,23 @@ for fname in os.listdir(os.path.join(constants.graphicspath, constants.spritepat
     else:
         queen.addimg(tmpimg)
 
+# lemon image
+lemimg = pygame.image.load(os.path.join(constants.graphicspath, "lemon.bmp"))
+bullets = []
+
 # Load level resources and suchlike here (this may turn out to be temporary)
 # rooms
 level = room.Room(os.path.join(constants.levelpath, 'empty.hcr'))
 
 # Set up socket for multiplayer
 serv = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
-serv.bind(('localhost', 5432))
+serv.bind(('', 5432))
 serv.listen(5)
 
 pygame.mixer.music.load(os.path.join(constants.musicpath, 'HiveCyrus.ogg'))
 pygame.mixer.music.play(-1)
+
+lemsound = pygame.mixer.Sound(os.path.join(constants.musicpath, 'lemon.ogg'))
 
 print "Waiting..."
 (sock, address) = serv.accept()
@@ -109,6 +117,9 @@ while True: # mainloop
                 up = False
             elif event.key == K_DOWN:
                 down = False
+            elif event.key == K_SPACE:
+                bullets.append(lemons.Bullet(lemimg, player))
+                lemsound.play()
 
     player.direction = direction
 
@@ -129,8 +140,8 @@ while True: # mainloop
         if pygame.sprite.spritecollide(player.pgsprite, level.unwalkable, False) != []:
             player.moveup()
     try:
-        zpos = pickle.loads(sock.recv(1024))
-        sock.send(pickle.dumps([player.position, player.direction]))
+        zpos = pickle.loads(sock.recv(1024000))
+        sock.send(pickle.dumps([player.position, player.direction, [b.position for b in bullets]]))
     except:
         pygame.quit()
         sys.exit("Other half closed")
@@ -149,12 +160,41 @@ while True: # mainloop
                 else:
                     children[-1].addimg(tmpimg)
             babygroup.add(children[-1].pgsprite)
-        children[i].position = zpos[i+1]
+        children[i].setpos(zpos[i+1])
+
+    for b in bullets:
+        deadbabies = pygame.sprite.spritecollide(b.pgsprite, babygroup, False)
+        if pygame.sprite.collide_rect(queen.pgsprite, b.pgsprite):
+            sleep(2)
+            pygame.quit()
+            sys.exit("YOU WIN.")
+        if deadbabies != []:
+            babygroup.remove(deadbabies)
+            children = [x for x in children if not x.pgsprite in deadbabies]
+            bullets.remove(b)
+        if pygame.sprite.spritecollideany(b.pgsprite, level.unwalkable):
+            bullets.remove(b)
+
+    babies = pygame.sprite.spritecollide(player.pgsprite, babygroup, False)
+    if babies != []:
+        player.lives -= 1
+        babygroup.remove(babies)
+        children = [x for x in children if not x.pgsprite in babies]
+
+    if player.lives <= 0 or pygame.sprite.collide_rect(player.pgsprite, queen.pgsprite):
+        sleep(2)
+        pygame.quit()
+        sys.exit("YOU LOSE.")
 
     level.draw(window)
 
     for z in zerg:
         z.draw(window)
+
+    for b in bullets:
+        b.updatex()
+        b.updatey()
+        b.draw(window)
 
     if rotation != direction:
         rotation = direction
