@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import pygame, sys, os
+import pygame, sys, os, socket
 from pygame.locals import *
 
 import constants
@@ -24,25 +24,36 @@ light = light.convert_alpha()
 
 # sprites
 sprites = []
-i = 0
-j = 1
 tmpimg = None
 for spr in os.listdir(os.path.join(constants.graphicspath, constants.spritepath)):
     print spr
     first = True
+    i = 0
     for fname in os.listdir(os.path.join(constants.graphicspath, constants.spritepath, spr)):
+        print fname
+        print os.path.join(constants.graphicspath, constants.spritepath, spr, fname)
         tmpimg = pygame.image.load(os.path.join(constants.graphicspath, constants.spritepath, spr, fname))
         tmpimg = tmpimg.convert()
         tmpimg.set_colorkey(pygame.Color(255,0,255))
         if first:
-            sprites.append(sprite.Sprite(tmpimg))
+            print i
+            sprites.append(sprite.Sprite(tmpimg, i))
             first = False
         else:
-            sprites[-1].addimg(tmpimg)
+            print i
+            sprites[-1].addimg(tmpimg, i)
+        i += 1
 
 # Load level resources and suchlike here (this may turn out to be temporary)
 # rooms
 level = room.Room(os.path.join(constants.levelpath, 'empty.hcr'))
+
+# Set up socket for multiplayer
+#s = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
+# s.bind((socket.gethostname(), 32001))
+# s.listen(1)
+
+# (s, address) = s.accept()
 
 left = False
 right = False
@@ -85,25 +96,26 @@ while True: # main loop
             sprites[-1].moveleft()
     if up:
         sprites[-1].moveup()
-        sprites[-1].frame = 1
         if pygame.sprite.spritecollide(sprites[-1].pgsprite, level.unwalkable, False) != []:
             sprites[-1].movedown()
     if down:
         sprites[-1].movedown()
-        sprites[-1].frame = 0
         if pygame.sprite.spritecollide(sprites[-1].pgsprite, level.unwalkable, False) != []:
             sprites[-1].moveup()
 
-#    for t in tiles:
-#        t.draw(window)
+    #s.send(socket.htonl(sprites[-1].position[0]))
+    #s.send(socket.htonl(sprites[-1].position[1]))
+# receive would go here
 
     level.draw(window)
 
-    for s in sprites:
-        s.draw(window)
+    drawlight = pygame.transform.rotate(light, sprites[-1].direction * 90)
 
     # Render the light overlay
-    window.blit(light, ( (sprites[-1].position[0]*constants.tilesize) - (light.get_width() / 2) + constants.tilesize / 2, (sprites[-1].position[1]*constants.tilesize) - (light.get_height() / 2) + constants.tilesize / 2 ) )
+    window.blit(drawlight, ( (sprites[-1].position[0]*constants.tilesize) - (light.get_width() / 2) + constants.tilesize / 2, (sprites[-1].position[1]*constants.tilesize) - (light.get_height() / 2) + constants.tilesize / 2 ) )
+
+    for s in sprites:
+        s.draw(window)
 
     pygame.display.update()
     clock.tick(30)
