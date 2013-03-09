@@ -200,6 +200,9 @@ while True: # main loop
     for z in zerg:
         z.draw(window)
 
+    for b in bullets:
+        b.draw(window)
+
     for s in selected:
         pygame.draw.rect(window, (0, 255, 255), (s.position[0]*constants.tilesize, s.position[1]*constants.tilesize, constants.tilesize, constants.tilesize), 1)
 
