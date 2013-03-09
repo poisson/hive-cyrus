@@ -10,9 +10,6 @@ class Sprite:
 
     def draw(self, window):
         window.blit(self.images[self.frame], (self.position[0]*constants.tilesize, self.position[1]*constants.tilesize))
-        self.frame += 1
-        if (self.frame % len(self.images)) == 0:
-            self.frame = 0
 
     def __init__(self, img, pos=(2,2)):
         self.pgsprite = pygame.sprite.Sprite()

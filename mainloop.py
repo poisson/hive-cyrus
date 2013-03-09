@@ -18,17 +18,9 @@ pygame.display.set_caption(constants.title)
 
 # Load graphics resources here
 
-## tiles
-#tiles = []
-#i = 1
-#j = 0
-#for fname in os.listdir(os.path.join(constants.graphicspath, constants.tilepath)):
-#    tiles.append(tile.Tile(pygame.image.load(os.path.join(constants.graphicspath, constants.tilepath, fname)), fname, [(i, j)])) # position loading here is temporary for display purposes
-#    tiles[-1].surface.convert()
-#    i += 1
-#    if i % (800/constants.tilesize) == 0:
-#        i = 0
-#        j += 1
+# light
+light = pygame.image.load(os.path.join(constants.graphicspath, constants.lightpath))
+light = light.convert_alpha()
 
 # sprites
 sprites = []
@@ -40,7 +32,7 @@ for spr in os.listdir(os.path.join(constants.graphicspath, constants.spritepath)
     first = True
     for fname in os.listdir(os.path.join(constants.graphicspath, constants.spritepath, spr)):
         tmpimg = pygame.image.load(os.path.join(constants.graphicspath, constants.spritepath, spr, fname))
-        tmpimg.convert()
+        tmpimg = tmpimg.convert()
         tmpimg.set_colorkey(pygame.Color(255,0,255))
         if first:
             sprites.append(sprite.Sprite(tmpimg))
@@ -83,7 +75,6 @@ while True: # main loop
             elif event.key == K_DOWN:
                 down = False
 
-    print pygame.sprite.spritecollide(sprites[-1].pgsprite, level.unwalkable, False)
     if left:
         sprites[-1].moveleft()
         if pygame.sprite.spritecollide(sprites[-1].pgsprite, level.unwalkable, False) != []:
@@ -94,10 +85,12 @@ while True: # main loop
             sprites[-1].moveleft()
     if up:
         sprites[-1].moveup()
+        sprites[-1].frame = 1
         if pygame.sprite.spritecollide(sprites[-1].pgsprite, level.unwalkable, False) != []:
             sprites[-1].movedown()
     if down:
         sprites[-1].movedown()
+        sprites[-1].frame = 0
         if pygame.sprite.spritecollide(sprites[-1].pgsprite, level.unwalkable, False) != []:
             sprites[-1].moveup()
 
@@ -108,6 +101,9 @@ while True: # main loop
 
     for s in sprites:
         s.draw(window)
+
+    # Render the light overlay
+    window.blit(light, ( (sprites[-1].position[0]*constants.tilesize) - (light.get_width() / 2) + constants.tilesize / 2, (sprites[-1].position[1]*constants.tilesize) - (light.get_height() / 2) + constants.tilesize / 2 ) )
 
     pygame.display.update()
     clock.tick(30)

@@ -36,8 +36,9 @@ class Room:
             elif state == "map":
                 self.board.append(map(int, line.split()))
         for tmp in tmptiles:
+            print 'x' + str(tmp) + 'x'
             img = pygame.image.load(os.path.join(constants.graphicspath, constants.tilepath, tmp[0]))
-            img.convert()
+            img = img.convert()
             if int(tmp[2]) == 0:
                 self.tiles[int(tmp[1])] = tile.Tile(img, tmp[0], False)
             else:
